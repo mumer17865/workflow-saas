@@ -1,0 +1,20 @@
+{
+  "name": "workflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkFlow — multi-tenant project management SaaS (Next.js + NestJS + PostgreSQL)",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "web": "pnpm --filter @workflow/web",
+    "api": "pnpm --filter @workflow/api"
+  }
+}
