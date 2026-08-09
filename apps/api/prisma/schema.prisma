@@ -1,7 +1,7 @@
 // WorkFlow — Prisma schema
 // Phase 2: auth/tenancy core (User, Organization, OrganizationMember, RefreshToken).
 // Phase 3: Invitation for token-based org member invites.
-// Project/Task/Comment/Activity arrive in later phases.
+// Phase 4: Project (org-scoped). Task/Comment/Activity arrive in later phases.
 
 generator client {
   provider = "prisma-client-js"
@@ -24,6 +24,11 @@ enum InvitationStatus {
   REVOKED
 }
 
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -37,6 +42,7 @@ model User {
   memberships        OrganizationMember[]
   refreshTokens      RefreshToken[]
   sentInvitations    Invitation[]         @relation("InvitationInviter")
+  createdProjects    Project[]            @relation("ProjectCreator")
 
   @@map("users")
 }
@@ -51,6 +57,7 @@ model Organization {
   owner       User                 @relation("OrganizationOwner", fields: [ownerId], references: [id])
   members     OrganizationMember[]
   invitations Invitation[]
+  projects    Project[]
 
   @@index([ownerId])
   @@map("organizations")
@@ -103,4 +110,21 @@ model Invitation {
   @@index([organizationId, status])
   @@index([email])
   @@map("invitations")
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  status         ProjectStatus @default(ACTIVE)
+  createdById    String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("ProjectCreator", fields: [createdById], references: [id])
+
+  @@index([organizationId, status])
+  @@map("projects")
 }

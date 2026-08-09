@@ -7,6 +7,7 @@ import { useAuth } from "@/providers/auth-provider";
 
 const NAV = [
   { href: "/app/dashboard", label: "Dashboard" },
+  { href: "/app/projects", label: "Projects" },
   { href: "/app/team", label: "Team" },
   { href: "/app/settings", label: "Settings" },
 ];
