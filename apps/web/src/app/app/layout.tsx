@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
+
+const NAV = [
+  { href: "/app/dashboard", label: "Dashboard" },
+  { href: "/app/team", label: "Team" },
+  { href: "/app/settings", label: "Settings" },
+];
 
 export default function AppLayout({
   children,
@@ -11,6 +18,7 @@ export default function AppLayout({
 }) {
   const { status, user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -28,8 +36,28 @@ export default function AppLayout({
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-black/10 px-6 py-3 dark:border-white/10">
-        <span className="text-lg font-bold tracking-tight">WorkFlow</span>
+      <header className="flex flex-col gap-3 border-b border-black/10 px-6 py-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-6">
+          <span className="text-lg font-bold tracking-tight">WorkFlow</span>
+          <nav className="flex items-center gap-1">
+            {NAV.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-black/5 dark:bg-white/10"
+                      : "text-neutral-500 hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-neutral-500">{user?.name}</span>
           <button

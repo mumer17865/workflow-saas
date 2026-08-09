@@ -1,6 +1,7 @@
 // WorkFlow — Prisma schema
-// Phase 2 adds the auth/tenancy core: User, Organization, OrganizationMember,
-// and RefreshToken. Project/Task/Comment/Activity arrive in later phases.
+// Phase 2: auth/tenancy core (User, Organization, OrganizationMember, RefreshToken).
+// Phase 3: Invitation for token-based org member invites.
+// Project/Task/Comment/Activity arrive in later phases.
 
 generator client {
   provider = "prisma-client-js"
@@ -17,6 +18,12 @@ enum OrgRole {
   MEMBER
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -29,6 +36,7 @@ model User {
   ownedOrganizations Organization[]       @relation("OrganizationOwner")
   memberships        OrganizationMember[]
   refreshTokens      RefreshToken[]
+  sentInvitations    Invitation[]         @relation("InvitationInviter")
 
   @@map("users")
 }
@@ -40,8 +48,9 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner   User                 @relation("OrganizationOwner", fields: [ownerId], references: [id])
-  members OrganizationMember[]
+  owner       User                 @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  members     OrganizationMember[]
+  invitations Invitation[]
 
   @@index([ownerId])
   @@map("organizations")
@@ -74,4 +83,24 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrgRole          @default(MEMBER)
+  tokenHash      String           @unique
+  status         InvitationStatus @default(PENDING)
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitationInviter", fields: [invitedById], references: [id])
+
+  @@index([organizationId, status])
+  @@index([email])
+  @@map("invitations")
 }

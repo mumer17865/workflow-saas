@@ -1,6 +1,7 @@
 import {
   clearAccessToken,
   getAccessToken,
+  getActiveOrgId,
   setAccessToken,
 } from "./auth-store";
 
@@ -55,6 +56,10 @@ export async function apiFetch<T>(
   const token = getAccessToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+  const orgId = getActiveOrgId();
+  if (orgId && !headers.has("x-organization-id")) {
+    headers.set("x-organization-id", orgId);
   }
 
   const res = await fetch(`${API_URL}${path}`, {
