@@ -16,7 +16,7 @@ A lightweight alternative to Jira/ClickUp/Asana for small teams: an organization
 - ✓ Activity tracking
 - ✓ Responsive UI
 
-> Delivered in phases — see [Development phases](#development-phases). Currently: **Phase 2 — Authentication** complete.
+> Delivered in phases — see [Development phases](#development-phases). Currently: **Phase 3 — Organizations & RBAC** complete.
 
 ## Tech Stack
 
@@ -69,8 +69,8 @@ Health check: <http://localhost:4000/api/health>
 ## Development phases
 
 1. **Foundation** — monorepo, Next.js + NestJS, Docker Postgres, env, health check
-2. **Authentication** — register/login/refresh/logout, protected routes ← _current_
-3. Organizations — members, roles, RBAC guards
+2. **Authentication** — register/login/refresh/logout, protected routes
+3. **Organizations & RBAC** — members, roles, invitations, guard-enforced permissions ← _current_
 4. Projects — CRUD, list, details
 5. Tasks — CRUD, assignment, Kanban, filtering
 6. Dashboard & Reports — stats, charts, activity feed
