@@ -213,9 +213,13 @@ export default function ProjectDetailPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-black/10 p-4 text-sm text-neutral-500 dark:border-white/10">
-            Tasks for this project arrive in Phase 5.
-          </div>
+          <Link
+            href={`/app/projects/${id}/board`}
+            className="flex items-center justify-between rounded-xl border border-black/10 p-4 text-sm transition-colors hover:bg-black/[0.02] dark:border-white/10 dark:hover:bg-white/[0.03]"
+          >
+            <span className="font-medium">Task board</span>
+            <span className="text-neutral-400">Open Kanban →</span>
+          </Link>
         </>
       )}
     </div>
