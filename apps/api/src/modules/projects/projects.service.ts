@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { ActivityService } from "../activity/activity.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 
@@ -33,7 +34,10 @@ function toDto(project: ProjectWithCreator) {
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activity: ActivityService,
+  ) {}
 
   async list(organizationId: string) {
     const projects = await this.prisma.project.findMany({
@@ -69,12 +73,27 @@ export class ProjectsService {
       },
       include: projectInclude,
     });
+
+    await this.activity.record({
+      organizationId,
+      actorId: createdById,
+      type: "PROJECT_CREATED",
+      entityType: "project",
+      entityId: project.id,
+      metadata: { name: project.name },
+    });
+
     return toDto(project);
   }
 
-  async update(organizationId: string, id: string, dto: UpdateProjectDto) {
+  async update(
+    organizationId: string,
+    id: string,
+    dto: UpdateProjectDto,
+    actorId: string,
+  ) {
     // Scope the existence check to the org so cross-tenant ids 404 rather than leak.
-    await this.get(organizationId, id);
+    const before = await this.get(organizationId, id);
 
     const project = await this.prisma.project.update({
       where: { id },
@@ -87,6 +106,18 @@ export class ProjectsService {
       },
       include: projectInclude,
     });
+
+    if (before.status !== "ARCHIVED" && project.status === "ARCHIVED") {
+      await this.activity.record({
+        organizationId,
+        actorId,
+        type: "PROJECT_ARCHIVED",
+        entityType: "project",
+        entityId: project.id,
+        metadata: { name: project.name },
+      });
+    }
+
     return toDto(project);
   }
 

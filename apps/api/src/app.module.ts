@@ -7,6 +7,8 @@ import { OrganizationsModule } from "./modules/organizations/organizations.modul
 import { InvitationsModule } from "./modules/invitations/invitations.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
+import { ActivityModule } from "./modules/activity/activity.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { TasksModule } from "./modules/tasks/tasks.module";
     InvitationsModule,
     ProjectsModule,
     TasksModule,
+    ActivityModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

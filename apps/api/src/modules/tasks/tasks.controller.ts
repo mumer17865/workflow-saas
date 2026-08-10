@@ -63,11 +63,12 @@ export class TasksController {
   @Roles(OrgRole.ADMIN, OrgRole.MANAGER)
   update(
     @CurrentOrg() org: ActiveOrg,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("projectId") projectId: string,
     @Param("id") id: string,
     @Body() dto: UpdateTaskDto,
   ) {
-    return this.tasks.update(org.organizationId, projectId, id, dto);
+    return this.tasks.update(org.organizationId, projectId, id, dto, user.id);
   }
 
   @Delete(":id")

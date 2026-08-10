@@ -8,12 +8,16 @@ import {
 import { OrgRole } from "@prisma/client";
 import { createHash, randomBytes } from "crypto";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { ActivityService } from "../activity/activity.service";
 
 const INVITE_TTL_MS = 7 * 86_400_000;
 
 @Injectable()
 export class InvitationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activity: ActivityService,
+  ) {}
 
   async create(
     organizationId: string,
@@ -159,6 +163,15 @@ export class InvitationsService {
         data: { status: "ACCEPTED", acceptedAt: new Date() },
       }),
     ]);
+
+    await this.activity.record({
+      organizationId: invitation.organizationId,
+      actorId: userId,
+      type: "MEMBER_JOINED",
+      entityType: "member",
+      entityId: userId,
+      metadata: { email: invitation.email, role: invitation.role },
+    });
 
     return { organizationId: invitation.organizationId, role: invitation.role };
   }
