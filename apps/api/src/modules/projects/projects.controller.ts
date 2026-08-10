@@ -52,10 +52,11 @@ export class ProjectsController {
   @Roles(OrgRole.ADMIN, OrgRole.MANAGER)
   update(
     @CurrentOrg() org: ActiveOrg,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("id") id: string,
     @Body() dto: UpdateProjectDto,
   ) {
-    return this.projects.update(org.organizationId, id, dto);
+    return this.projects.update(org.organizationId, id, dto, user.id);
   }
 
   @Delete(":id")

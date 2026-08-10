@@ -2,7 +2,8 @@
 // Phase 2: auth/tenancy core (User, Organization, OrganizationMember, RefreshToken).
 // Phase 3: Invitation for token-based org member invites.
 // Phase 4: Project (org-scoped).
-// Phase 5: Task (project-scoped, Kanban status, priority, assignment). Comment/Activity arrive later.
+// Phase 5: Task (project-scoped, Kanban status, priority, assignment).
+// Phase 6: Activity (org-scoped audit events powering the dashboard feed). Comment arrives later.
 
 generator client {
   provider = "prisma-client-js"
@@ -45,6 +46,14 @@ enum TaskPriority {
   URGENT
 }
 
+enum ActivityType {
+  PROJECT_CREATED
+  PROJECT_ARCHIVED
+  TASK_CREATED
+  TASK_STATUS_CHANGED
+  MEMBER_JOINED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -61,6 +70,7 @@ model User {
   createdProjects    Project[]            @relation("ProjectCreator")
   createdTasks       Task[]               @relation("TaskCreator")
   assignedTasks      Task[]               @relation("TaskAssignee")
+  activities         Activity[]           @relation("ActivityActor")
 
   @@map("users")
 }
@@ -77,6 +87,7 @@ model Organization {
   invitations Invitation[]
   projects    Project[]
   tasks       Task[]
+  activities  Activity[]
 
   @@index([ownerId])
   @@map("organizations")
@@ -173,4 +184,23 @@ model Task {
   @@index([organizationId])
   @@index([assigneeId])
   @@map("tasks")
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  organizationId String
+  actorId        String?
+  type           ActivityType
+  entityType     String
+  entityId       String
+  // Snapshot of the event (e.g. title, project name, from/to status) so the
+  // feed renders even after the referenced entity is deleted.
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("activities")
 }

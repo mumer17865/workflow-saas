@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { Prisma, TaskStatus } from "@prisma/client";
 import { PrismaService } from "../../common/prisma/prisma.service";
+import { ActivityService } from "../activity/activity.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { TaskQueryDto } from "./dto/task-query.dto";
@@ -42,7 +43,10 @@ function toDto(task: TaskWithRelations) {
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activity: ActivityService,
+  ) {}
 
   async list(
     organizationId: string,
@@ -111,6 +115,16 @@ export class TasksService {
       },
       include: taskInclude,
     });
+
+    await this.activity.record({
+      organizationId,
+      actorId: createdById,
+      type: "TASK_CREATED",
+      entityType: "task",
+      entityId: task.id,
+      metadata: { title: task.title, projectId },
+    });
+
     return toDto(task);
   }
 
@@ -119,8 +133,9 @@ export class TasksService {
     projectId: string,
     id: string,
     dto: UpdateTaskDto,
+    actorId: string,
   ) {
-    await this.get(organizationId, projectId, id); // scoped existence check
+    const before = await this.get(organizationId, projectId, id); // scoped existence check
 
     if (dto.assigneeId) {
       await this.assertOrgMember(organizationId, dto.assigneeId);
@@ -147,6 +162,23 @@ export class TasksService {
       data,
       include: taskInclude,
     });
+
+    if (dto.status !== undefined && dto.status !== before.status) {
+      await this.activity.record({
+        organizationId,
+        actorId,
+        type: "TASK_STATUS_CHANGED",
+        entityType: "task",
+        entityId: task.id,
+        metadata: {
+          title: task.title,
+          projectId,
+          fromStatus: before.status,
+          toStatus: task.status,
+        },
+      });
+    }
+
     return toDto(task);
   }
 
