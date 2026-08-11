@@ -1,11 +1,11 @@
 name: Deploy
 
 # One-click deploys: Actions tab → Deploy → Run workflow.
-# Auto-deploys: every push to main.
+# Auto-deploys: every push to env/prod (the production release branch).
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [env/prod]
 
 # Never let two deploys overlap; a newer push supersedes a queued one.
 concurrency:
