@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { ApiError } from "@/lib/api-client";
 import type { Member } from "@/lib/api/organizations";
 import {
@@ -59,6 +60,7 @@ export function TaskModal({ projectId, members, task, onClose, onSaved }: Props)
       } else {
         await createTask(projectId, payload);
       }
+      toast.success(editing ? "Task updated" : "Task created");
       onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to save task");

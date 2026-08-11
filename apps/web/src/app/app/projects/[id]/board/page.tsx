@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getMembers, type Member } from "@/lib/api/organizations";
 import { getProject } from "@/lib/api/projects";
 import {
@@ -120,7 +122,7 @@ export default function BoardPage() {
     try {
       await updateTask(projectId, id, { status, position });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to move task");
+      toast.error(err instanceof ApiError ? err.message : "Failed to move task");
       await load();
     }
   };
@@ -130,13 +132,23 @@ export default function BoardPage() {
     try {
       await deleteTask(projectId, id);
       setTasks((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Task deleted");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to delete task");
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete task");
     }
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading board…</p>;
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-8 w-32" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -204,7 +216,7 @@ export default function BoardPage() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {TASK_STATUSES.map((col) => {
           const columnTasks = byStatus(col.value);
           return (
@@ -212,7 +224,7 @@ export default function BoardPage() {
               key={col.value}
               onDragOver={(e) => canWrite && e.preventDefault()}
               onDrop={() => canWrite && onDrop(col.value, null)}
-              className="flex min-h-[200px] flex-col rounded-xl border border-black/10 bg-black/[0.015] p-2 dark:border-white/10 dark:bg-white/[0.02]"
+              className="flex min-h-[200px] w-64 shrink-0 flex-col rounded-xl border border-black/10 bg-black/[0.015] p-2 dark:border-white/10 dark:bg-white/[0.02] sm:w-auto sm:flex-1 sm:basis-56"
             >
               <div className="mb-2 flex items-center justify-between px-1">
                 <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">

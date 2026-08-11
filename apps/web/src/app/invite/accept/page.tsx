@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import {
@@ -96,6 +97,7 @@ function AcceptInvite() {
     try {
       await acceptInvitation(token);
       await refreshUser();
+      toast.success(`Welcome to ${preview?.organizationName ?? "the team"}!`);
       router.replace("/app/team");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to accept");

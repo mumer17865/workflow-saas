@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import type { OrgRole } from "@/lib/types";
@@ -14,6 +15,8 @@ import {
   type Invitation,
   type Member,
 } from "@/lib/api/organizations";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/states";
 
 const ROLES: OrgRole[] = ["ADMIN", "MANAGER", "MEMBER"];
 
@@ -55,9 +58,10 @@ export default function TeamPage() {
   const onRoleChange = async (userId: string, role: OrgRole) => {
     try {
       await updateMemberRole(userId, role);
+      toast.success("Role updated");
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to update role");
+      toast.error(err instanceof ApiError ? err.message : "Failed to update role");
     }
   };
 
@@ -65,9 +69,12 @@ export default function TeamPage() {
     if (!confirm(`Remove ${name} from the organization?`)) return;
     try {
       await removeMember(userId);
+      toast.success(`${name} removed`);
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to remove member");
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to remove member",
+      );
     }
   };
 
@@ -82,6 +89,7 @@ export default function TeamPage() {
         `${window.location.origin}/invite/accept?token=${created.token}`,
       );
       setInviteEmail("");
+      toast.success("Invitation created");
       await load();
     } catch (err) {
       setInviteError(
@@ -95,14 +103,20 @@ export default function TeamPage() {
   const onRevoke = async (id: string) => {
     try {
       await revokeInvitation(id);
+      toast.success("Invitation revoked");
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to revoke");
+      toast.error(err instanceof ApiError ? err.message : "Failed to revoke");
     }
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading team…</p>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-28" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -115,11 +129,7 @@ export default function TeamPage() {
         </p>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <ErrorState message={error} onRetry={load} />}
 
       <section className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10">
         <table className="w-full text-sm">
