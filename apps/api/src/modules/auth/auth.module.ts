@@ -4,6 +4,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { requireJwtSecret } from "./auth.constants";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
@@ -13,7 +14,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>("JWT_ACCESS_SECRET") ?? "insecure-dev-secret",
+        secret: requireJwtSecret(config),
         signOptions: {
           // Runtime value is a duration string like "15m"; @nestjs/jwt v11 types
           // it as ms's StringValue template, so cast the plain config string.

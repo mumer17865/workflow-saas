@@ -16,11 +16,20 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/**
+ * Only allow internal paths as a post-login destination. Anything absolute
+ * ("https://…") or protocol-relative ("//…") is an open-redirect vector.
+ */
+function safeRedirect(raw: string | null): string {
+  if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  return "/app/dashboard";
+}
+
 function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/app/dashboard";
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const [formError, setFormError] = useState<string | null>(null);
 
   const {

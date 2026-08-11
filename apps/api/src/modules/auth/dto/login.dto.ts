@@ -7,5 +7,6 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(128)
   password!: string;
 }

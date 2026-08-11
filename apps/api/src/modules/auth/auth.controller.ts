@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "./auth.service";
 import { REFRESH_COOKIE } from "./auth.constants";
 import { RegisterDto } from "./dto/register.dto";
@@ -25,6 +26,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("register")
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() dto: RegisterDto,
@@ -36,6 +38,7 @@ export class AuthController {
   }
 
   @Post("login")
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,
@@ -47,6 +50,7 @@ export class AuthController {
   }
 
   @Post("refresh")
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Req() req: Request,

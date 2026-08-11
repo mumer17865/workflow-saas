@@ -1,4 +1,26 @@
+import { Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+
 export const REFRESH_COOKIE = "refresh_token";
+
+/**
+ * Resolve the JWT signing secret. Missing config is a hard boot failure in
+ * production — a guessable fallback there would let anyone forge tokens.
+ * In development we keep a fixed value for convenience, but say so loudly.
+ */
+export function requireJwtSecret(config: ConfigService): string {
+  const secret = config.get<string>("JWT_ACCESS_SECRET");
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "JWT_ACCESS_SECRET is not set. Refusing to start in production without a signing secret.",
+    );
+  }
+  new Logger("Auth").warn(
+    "JWT_ACCESS_SECRET is not set — using an insecure development-only secret.",
+  );
+  return "insecure-dev-secret";
+}
 
 /**
  * Parse a short duration string like "15m", "7d", "30s", "12h" into milliseconds.
