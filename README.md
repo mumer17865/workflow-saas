@@ -4,6 +4,8 @@ Multi-tenant project management SaaS built with **Next.js**, **NestJS**, **Postg
 
 A lightweight alternative to Jira/ClickUp/Asana for small teams: an organization signs up, creates projects, invites members, and tracks tasks through a Kanban board and dashboard.
 
+**Live demo:** [workflow-saas.vercel.app](https://workflow-saas.vercel.app) · API: [api-production-2826.up.railway.app/api/health](https://api-production-2826.up.railway.app/api/health)
+
 ## Features
 
 - ✓ Authentication (access + refresh tokens)
@@ -16,7 +18,7 @@ A lightweight alternative to Jira/ClickUp/Asana for small teams: an organization
 - ✓ Activity tracking
 - ✓ Responsive UI
 
-> Delivered in phases — see [Development phases](#development-phases). Currently: **Phase 8 — Deployment** (deploy-ready; see [Deployment](#deployment)).
+> Delivered in phases — see [Development phases](#development-phases). **All 8 phases complete — live in production.**
 
 ## Tech Stack
 
@@ -68,9 +70,10 @@ Health check: <http://localhost:4000/api/health>
 
 ## Deployment
 
-Web on **Vercel**, API + PostgreSQL on **Railway**. The repo ships a
+Live: web at [workflow-saas.vercel.app](https://workflow-saas.vercel.app) (Vercel),
+API + PostgreSQL on Railway. The repo ships a
 `railway.json` that builds the API, runs `prisma migrate deploy`, and
-health-checks `/api/health`.
+health-checks `/api/health`. To reproduce the setup from scratch:
 
 ### 1. API + database (Railway)
 
@@ -107,6 +110,31 @@ health-checks `/api/health`.
 > block third-party cookies entirely may require a custom domain with the web
 > and API on sibling subdomains (`app.example.com` / `api.example.com`).
 
+### CI/CD — one-click / one-command deploys
+
+**One click (GitHub Actions):** `.github/workflows/deploy.yml` builds both apps,
+then deploys the API to Railway and the web to Vercel — in parallel — on every
+push to `main`, or manually via **Actions → Deploy → Run workflow**.
+
+Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Where to get it |
+|---|---|
+| `RAILWAY_TOKEN` | Railway → your project → Settings → Tokens (a **project** token) |
+| `RAILWAY_SERVICE` | API service name in Railway (optional — defaults to `api`) |
+| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens |
+| `VERCEL_ORG_ID` | `.vercel/project.json` after running `vercel link` in `apps/web` |
+| `VERCEL_PROJECT_ID` | same file |
+
+**One command (local):** after a one-time `railway link` (repo root) and
+`vercel link` (in `apps/web`):
+
+```bash
+pnpm deploy         # deploys API (Railway) then web (Vercel)
+pnpm deploy:api     # API only
+pnpm deploy:web     # web only
+```
+
 ## Development phases
 
 1. **Foundation** — monorepo, Next.js + NestJS, Docker Postgres, env, health check
@@ -116,7 +144,7 @@ health-checks `/api/health`.
 5. **Tasks** — CRUD, assignment, Kanban board (drag & drop), priority + assignee filters
 6. **Dashboard & Reports** — stat tiles, Recharts charts, activity feed (audit log)
 7. **Polish** — toasts (sonner), loading skeletons, empty/error states, responsive Kanban
-8. **Deployment** — Vercel (web) + Railway (API + Postgres), migrate-on-deploy, health checks ← _current_
+8. **Deployment** — Vercel (web) + Railway (API + Postgres), migrate-on-deploy, health checks, CI/CD pipeline
 
 ## License
 
