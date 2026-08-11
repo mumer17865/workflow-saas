@@ -1,0 +1,83 @@
+name: Deploy
+
+# One-click deploys: Actions tab → Deploy → Run workflow.
+# Auto-deploys: every push to main.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Never let two deploys overlap; a newer push supersedes a queued one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Build & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @workflow/api exec prisma generate
+
+      - name: Build API
+        run: pnpm --filter @workflow/api build
+
+      - name: Build web
+        run: pnpm --filter @workflow/web build
+
+  deploy-api:
+    name: Deploy API (Railway)
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      # RAILWAY_TOKEN is a *project* token (Railway → project → Settings →
+      # Tokens), which scopes the CLI to that project + environment.
+      # Railway runs the build/start commands from railway.json, including
+      # `prisma migrate deploy`, so DB migrations apply automatically.
+      - name: Deploy
+        run: railway up --service ${{ secrets.RAILWAY_SERVICE || 'api' }} --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-web:
+    name: Deploy web (Vercel)
+    runs-on: ubuntu-latest
+    needs: verify
+    defaults:
+      run:
+        working-directory: apps/web
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

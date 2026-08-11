@@ -14,6 +14,9 @@
     "typecheck": "pnpm -r run typecheck",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
+    "deploy": "pnpm deploy:api && pnpm deploy:web",
+    "deploy:api": "railway up --detach",
+    "deploy:web": "vercel deploy --prod --cwd apps/web",
     "web": "pnpm --filter @workflow/web",
     "api": "pnpm --filter @workflow/api"
   }
