@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import {
@@ -9,6 +10,8 @@ import {
   getProjects,
   type Project,
 } from "@/lib/api/projects";
+import { CardSkeleton } from "@/components/ui/skeleton";
+import { EmptyState, ErrorState } from "@/components/ui/states";
 
 export default function ProjectsPage() {
   const { activeOrg } = useAuth();
@@ -52,6 +55,7 @@ export default function ProjectsPage() {
       setName("");
       setDescription("");
       setShowForm(false);
+      toast.success("Project created");
       await load();
     } catch (err) {
       setFormError(
@@ -63,7 +67,18 @@ export default function ProjectsPage() {
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading projects…</p>;
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-40 animate-pulse rounded-md bg-black/10 dark:bg-white/10" />
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <li key={i}>
+              <CardSkeleton />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   return (
@@ -86,11 +101,7 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <ErrorState message={error} onRetry={load} />}
 
       {showForm && canWrite && (
         <form
@@ -136,13 +147,15 @@ export default function ProjectsPage() {
         </form>
       )}
 
-      {projects.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-black/15 p-10 text-center text-sm text-neutral-500 dark:border-white/15">
-          No projects yet.
-          {canWrite
-            ? " Create your first one above."
-            : " Ask an admin or manager to create one."}
-        </div>
+      {error ? null : projects.length === 0 ? (
+        <EmptyState
+          title="No projects yet"
+          description={
+            canWrite
+              ? "Create your first project to get started."
+              : "Ask an admin or manager to create one."
+          }
+        />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (

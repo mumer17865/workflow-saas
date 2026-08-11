@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import {
@@ -10,6 +10,8 @@ import {
   type DashboardStats,
 } from "@/lib/api/dashboard";
 import { DashboardCharts } from "./charts";
+import { Skeleton, StatTilesSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/states";
 
 export default function DashboardPage() {
   const { user, activeOrg } = useAuth();
@@ -19,31 +21,40 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [s, a] = await Promise.all([
-          getDashboardStats(),
-          getActivity(15),
-        ]);
-        setStats(s);
-        setActivity(a);
-      } catch (err) {
-        setError(
-          err instanceof ApiError ? err.message : "Failed to load dashboard",
-        );
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const [s, a] = await Promise.all([getDashboardStats(), getActivity(15)]);
+      setStats(s);
+      setActivity(a);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Failed to load dashboard",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading dashboard…</p>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <StatTilesSkeleton />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
   }
 
   if (error || !stats) {
-    return <p className="text-sm text-red-600">{error ?? "No data"}</p>;
+    return <ErrorState message={error ?? "No data"} onRetry={load} />;
   }
 
   return (

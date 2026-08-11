@@ -16,7 +16,7 @@ A lightweight alternative to Jira/ClickUp/Asana for small teams: an organization
 - ✓ Activity tracking
 - ✓ Responsive UI
 
-> Delivered in phases — see [Development phases](#development-phases). Currently: **Phase 6 — Dashboard & Reports** complete.
+> Delivered in phases — see [Development phases](#development-phases). Currently: **Phase 7 — Polish** complete.
 
 ## Tech Stack
 
@@ -73,8 +73,8 @@ Health check: <http://localhost:4000/api/health>
 3. **Organizations & RBAC** — members, roles, invitations, guard-enforced permissions
 4. **Projects** — CRUD, list, details, org-scoped with role-gated writes
 5. **Tasks** — CRUD, assignment, Kanban board (drag & drop), priority + assignee filters
-6. **Dashboard & Reports** — stat tiles, Recharts charts, activity feed (audit log) ← _current_
-7. Polish — responsive, loading/empty/error states, toasts
+6. **Dashboard & Reports** — stat tiles, Recharts charts, activity feed (audit log)
+7. **Polish** — toasts (sonner), loading skeletons, empty/error states, responsive Kanban ← _current_
 8. Deployment — Vercel + Railway + hosted Postgres
 
 ## License

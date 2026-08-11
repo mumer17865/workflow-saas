@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import {
@@ -12,6 +13,7 @@ import {
   type Project,
   type ProjectStatus,
 } from "@/lib/api/projects";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>();
@@ -62,6 +64,7 @@ export default function ProjectDetailPage() {
         status,
       });
       setEditing(false);
+      toast.success("Project updated");
       await load();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Failed to save");
@@ -74,14 +77,21 @@ export default function ProjectDetailPage() {
     if (!confirm("Delete this project? This cannot be undone.")) return;
     try {
       await deleteProject(id);
+      toast.success("Project deleted");
       router.replace("/app/projects");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to delete");
+      toast.error(err instanceof ApiError ? err.message : "Failed to delete");
     }
   };
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading project…</p>;
+    return (
+      <div className="max-w-2xl space-y-6">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
   }
 
   if (error || !project) {
