@@ -114,7 +114,8 @@ health-checks `/api/health`. To reproduce the setup from scratch:
 
 **One click (GitHub Actions):** `.github/workflows/deploy.yml` builds both apps,
 then deploys the API to Railway and the web to Vercel — in parallel — on every
-push to `main`, or manually via **Actions → Deploy → Run workflow**.
+push to **`env/prod`** (the production release branch), or manually via
+**Actions → Deploy → Run workflow**. Releasing = merging `DEV` into `env/prod`.
 
 Required GitHub repo secrets (Settings → Secrets and variables → Actions):
 
