@@ -77,17 +77,29 @@ export class AuthController {
     return this.authService.me(user.id);
   }
 
-  private setRefreshCookie(res: Response, token: string, expiresAt: Date): void {
-    res.cookie(REFRESH_COOKIE, token, {
+  /**
+   * In production the web app (Vercel) and API (Railway) live on different
+   * sites, so the refresh cookie must be SameSite=None + Secure to be sent on
+   * cross-site fetches. In dev both run on localhost, where Lax is stricter
+   * and sufficient.
+   */
+  private cookieOptions() {
+    return {
       httpOnly: true,
       secure: this.isProd,
-      sameSite: "lax",
+      sameSite: this.isProd ? ("none" as const) : ("lax" as const),
       path: "/",
+    };
+  }
+
+  private setRefreshCookie(res: Response, token: string, expiresAt: Date): void {
+    res.cookie(REFRESH_COOKIE, token, {
+      ...this.cookieOptions(),
       expires: expiresAt,
     });
   }
 
   private clearRefreshCookie(res: Response): void {
-    res.clearCookie(REFRESH_COOKIE, { path: "/" });
+    res.clearCookie(REFRESH_COOKIE, this.cookieOptions());
   }
 }
