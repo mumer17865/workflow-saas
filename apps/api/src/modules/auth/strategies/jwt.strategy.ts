@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { AuthService } from "../auth.service";
+import { requireJwtSecret } from "../auth.constants";
 import { AuthenticatedUser, JwtPayload } from "../types/jwt-payload";
 
 @Injectable()
@@ -14,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: config.get<string>("JWT_ACCESS_SECRET") ?? "insecure-dev-secret",
+      secretOrKey: requireJwtSecret(config),
     });
   }
 
