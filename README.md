@@ -112,20 +112,21 @@ health-checks `/api/health`. To reproduce the setup from scratch:
 
 ### CI/CD — one-click / one-command deploys
 
-**One click (GitHub Actions):** `.github/workflows/deploy.yml` builds both apps,
-then deploys the API to Railway and the web to Vercel — in parallel — on every
-push to **`env/prod`** (the production release branch), or manually via
-**Actions → Deploy → Run workflow**. Releasing = merging `DEV` into `env/prod`.
+Releasing = merging `DEV` into **`env/prod`**. That single push deploys both apps:
 
-Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+- **API → Railway** via GitHub Actions (`.github/workflows/deploy.yml`): builds,
+  then `railway up` (which runs `prisma migrate deploy` on boot). Also runnable
+  manually via **Actions → Deploy → Run workflow**.
+- **Web → Vercel** via Vercel's native GitHub integration — no token in CI. Set
+  the project's **Production Branch** to `env/prod` (Vercel → Settings → Git),
+  and every push there ships production automatically.
+
+Required GitHub repo secret (Settings → Secrets and variables → Actions):
 
 | Secret | Where to get it |
 |---|---|
 | `RAILWAY_TOKEN` | Railway → your project → Settings → Tokens (a **project** token) |
 | `RAILWAY_SERVICE` | API service name in Railway (optional — defaults to `api`) |
-| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens |
-| `VERCEL_ORG_ID` | `.vercel/project.json` after running `vercel link` in `apps/web` |
-| `VERCEL_PROJECT_ID` | same file |
 
 **One command (local):** after a one-time `railway link` (repo root) and
 `vercel link` (in `apps/web`):

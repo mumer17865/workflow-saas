@@ -2,6 +2,10 @@ name: Deploy
 
 # One-click deploys: Actions tab → Deploy → Run workflow.
 # Auto-deploys: every push to env/prod (the production release branch).
+#
+# The WEB app is deployed by Vercel's own GitHub integration (set Vercel's
+# Production Branch to env/prod), so it is intentionally NOT in this workflow —
+# that keeps Vercel tokens out of CI entirely. This workflow ships the API.
 on:
   workflow_dispatch:
   push:
@@ -56,28 +60,3 @@ jobs:
         run: railway up --service ${{ secrets.RAILWAY_SERVICE || 'api' }} --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-  deploy-web:
-    name: Deploy web (Vercel)
-    runs-on: ubuntu-latest
-    needs: verify
-    defaults:
-      run:
-        working-directory: apps/web
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
